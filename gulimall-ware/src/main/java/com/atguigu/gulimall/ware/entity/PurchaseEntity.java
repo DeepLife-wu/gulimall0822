@@ -56,10 +56,10 @@ public class PurchaseEntity implements Serializable {
 	/**
 	 * $column.comments
 	 */
-	private Date createTime;
+	private Date createTime = new Date();
 	/**
 	 * $column.comments
 	 */
-	private Date updateTime;
+	private Date updateTime = new Date();
 
 }

@@ -1,6 +1,15 @@
 package com.atguigu.gulimall.ware.service.impl;
 
+import com.alibaba.fastjson.TypeReference;
+import com.atguigu.common.utils.R;
+import com.atguigu.gulimall.ware.feign.MemberFeignService;
+import com.atguigu.gulimall.ware.vo.FeeVo;
+import com.atguigu.gulimall.ware.vo.MemberAddressVo;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
 import java.util.Map;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -16,14 +25,42 @@ import com.atguigu.gulimall.ware.service.WareInfoService;
 @Service("wareInfoService")
 public class WareInfoServiceImpl extends ServiceImpl<WareInfoDao, WareInfoEntity> implements WareInfoService {
 
+    @Autowired
+    private MemberFeignService memberFeignService;
+
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
+        QueryWrapper<WareInfoEntity> wrapper = new QueryWrapper<>();
+        String key = (String )params.get("key");
+        if(StringUtils.isNotBlank(key)) {
+            wrapper.eq("id",key).or().
+                    like("name",key).or().
+                    like("address",key).or().
+                    like("areacode",key);
+        }
+
         IPage<WareInfoEntity> page = this.page(
                 new Query<WareInfoEntity>().getPage(params),
-                new QueryWrapper<WareInfoEntity>()
+                wrapper
         );
 
         return new PageUtils(page);
+    }
+
+    @Override
+    public FeeVo getFee(Long addrId) {
+        FeeVo feeVo = new FeeVo();
+        R r = memberFeignService.addrInfo(addrId);
+        MemberAddressVo data = r.getData("memberReceiveAddress",new TypeReference<MemberAddressVo>() {
+        });
+        if(data != null) {
+            String phone = data.getPhone();
+            String substring = phone.substring(phone.length() - 1, phone.length());
+            BigDecimal fee = new BigDecimal(substring);
+            feeVo.setAddress(data);
+            feeVo.setFee(fee);
+        }
+        return feeVo;
     }
 
 }
