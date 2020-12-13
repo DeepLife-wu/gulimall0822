@@ -1,6 +1,7 @@
 package com.atguigu.gulimall.order.config;
 
 import org.springframework.amqp.core.Message;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
@@ -8,14 +9,30 @@ import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
 import javax.annotation.PostConstruct;
 
 @Configuration
 public class MyRabbitConfig {
 
-    @Autowired
+//    @Autowired
     private RabbitTemplate rabbitTemplate;
+
+    /*public MyRabbitConfig(RabbitTemplate rabbitTemplate) {
+        this.rabbitTemplate = rabbitTemplate;
+        this.initRabbitTemplate();
+    }*/
+
+    @Primary
+    @Bean
+    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
+        this.rabbitTemplate = new RabbitTemplate(connectionFactory);
+        rabbitTemplate.setMessageConverter(messageConverter());
+
+        this.initRabbitTemplate();
+        return rabbitTemplate;
+    }
 
     @Bean
     public MessageConverter messageConverter() {
@@ -25,7 +42,7 @@ public class MyRabbitConfig {
     /**
      * 定制RabbitTemplate
      */
-    @PostConstruct
+//    @PostConstruct
     public void initRabbitTemplate() {
 
         rabbitTemplate.setConfirmCallback(new RabbitTemplate.ConfirmCallback(){
